@@ -321,13 +321,27 @@ end
             if ($cmd[0] eq 'cd') {
                 $ret = chdir($cmd[1]);
             } else {
-                $ret = system(@cmd);
+                $ret = open(my $cmd, '-|', @cmd);
+                if ($ret) {
+                    my $flush = $|;
+                    $| = 1;
+                    my $i = 0;
+                    while (<$cmd>) {
+                        print $log $_;
+                        print "#" if $i % 50 == 0;
+                        $i++;
+                    }
+                    print "\n";
+                    $| = $flush;
+                    close($cmd);
+                } else {
+                    print STDERR "'@cmd' returned $ret\n";
+                }
             }
         };
-        my ($stdout, $stderr, $exit) = capture($code);
+        my ($stderr, $result) = capture_stderr($code);
         print $err $stderr;
-        print $log $stdout;
-        return $cmd[0] eq 'cd' ? $ret : ($ret == 0);
+        return $ret;
     };
 
     my $gdal = "gdal-$version";
