@@ -31,6 +31,7 @@ SKIP: {
 	$t1 = Geo::OSR::CoordinateTransformation->new($src, $dst);
 	$t2 = Geo::OSR::CoordinateTransformation->new($dst, $src);
     };
+    skip "Unable to load PROJ.4 library",1 if $@ =~ /Unable to load/;
     ok($t1, "new Geo::OSR::CoordinateTransformation $@");
 
     skip "new Geo::OSR::CoordinateTransformation failed",1 unless ($t1 and $t2);

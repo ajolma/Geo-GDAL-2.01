@@ -343,14 +343,18 @@ end
         } 
         elsif (-r "gdal-$version.tar.gz" and -s "gdal-$version.tar.gz") { # fetch leaves a zero sized file even when it fails
             print "Using existing \"$gdal.tar.gz\"\n";
-            $ok = $step->("tar", "zxf", "$gdal.tar.gz");
+            # extract into gdal
+            $ok = $step->("mkdir", "gdal");
+            $ok = $step->("tar", "zxf", "$gdal.tar.gz", "-C", "gdal", "--strip-components=1");
         }
         else {
             print "Attempting to fetch '$uri'\n";
             my $ff = File::Fetch->new(uri => $uri);
             $ok = $ff->fetch() if $ff;
             if ($ok) {
-                $ok = $step->("tar", "zxf", "$gdal.tar.gz");
+                # extract into gdal
+                $ok = $step->("mkdir", "gdal");
+                $ok = $step->("tar", "zxf", "$gdal.tar.gz", "-C", "gdal", "--strip-components=1");
             } else {
                 print "No luck. Maybe this is the development version?\n";
                 $ok = $step->("svn", "checkout", "https://svn.osgeo.org/gdal/trunk/gdal", "gdal");
@@ -362,7 +366,7 @@ end
     print $err $stderr;
     print $log $stdout;
     if ($ok) {
-        for my $cmd (["cd", $gdal],
+        for my $cmd (["cd", "gdal"],
                      ["./configure"],
                      [($^O =~ /bsd/i ? "gmake" : "make"), "-j4"],
                      ["cd", ".."]) 
@@ -373,7 +377,7 @@ end
     }
     close $log;
     close $err;
-    return "./$gdal" if $ok;
+    return "./gdal" if $ok;
     chdir($pwd);
     open($err, "<", "gdal-build.err") 
         or die "Can't open gdal-build.err: $!.";
