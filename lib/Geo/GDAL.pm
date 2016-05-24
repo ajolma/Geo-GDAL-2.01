@@ -1968,10 +1968,12 @@ sub Warp {
     my ($self, $dest, $options, $progress, $progress_data) = @_;
     $options = Geo::GDAL::GDALWarpAppOptions->new(Geo::GDAL::make_processing_options($options));
     my $b = blessed($dest);
+    $self = [$self] unless ref $self eq 'ARRAY';
     if ($b && $b eq 'Geo::GDAL::Dataset') {
         Geo::GDAL::wrapper_GDALWarpDestDS($dest, $self, $options, $progress, $progress_data);
     } else {
-        return $self->stdout_redirection_wrapper(
+        return stdout_redirection_wrapper(
+            $self,
             $dest,
             \&Geo::GDAL::wrapper_GDALWarpDestName,
             $options, $progress, $progress_data
