@@ -893,7 +893,7 @@ package Geo::OGR;
 
 
 package Geo::OGR;
-our $VERSION = '2.010003'; # this needs to be the same as that in gdal_perl.i
+our $VERSION = '2.010004'; # this needs to be the same as that in gdal_perl.i
 
 sub Driver {
     return 'Geo::GDAL::Driver' unless @_;
@@ -1707,6 +1707,10 @@ sub SetField {
         elsif ($type == $Geo::OGR::OFTDateTime) {
             $arg->[6] //= 0;
             _SetField($self, $field, @$arg[0..6]);
+        }
+        elsif ($type == $Geo::OGR::OFTInteger64) 
+        {
+            SetFieldInteger64($self, $field, $arg);
         }
         else {
             $type = $Geo::OGR::FieldDefn::TYPE_INT2STRING{$type};

@@ -1003,7 +1003,7 @@ use Geo::OSR;
 # Note that the 1/100000 digits may be used to create more than one
 # CPAN release from one GDAL release.
 
-our $VERSION = '2.010003';
+our $VERSION = '2.010004';
 our $GDAL_VERSION = '2.1.0';
 
 =pod
