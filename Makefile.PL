@@ -123,7 +123,7 @@ if (!$config && $downloads_are_ok) {
     $source_tree = "./gdal";
     $config = "$source_tree/apps/gdal-config";
     unless (-e $config) {
-        $source_tree = download_and_compile_gdal($my_gdal_version);
+        download_and_compile_gdal($my_gdal_version);
         $config = "$source_tree/apps/gdal-config";
     }
 }
@@ -160,7 +160,8 @@ die $msg if ($gdal_config && $different_versions && !$versions_may_differ) ||
     (!$downloads_are_ok && $different_versions && !$versions_may_differ);
 
 if ($different_versions && !$gdal_config && !$versions_may_differ && $downloads_are_ok) {
-    $source_tree = download_and_compile_gdal($my_gdal_version, $gdal_version);
+    $source_tree = './gdal';
+    download_and_compile_gdal($my_gdal_version, $gdal_version);
     $config = "$source_tree/apps/gdal-config";
 }
 
@@ -338,6 +339,10 @@ end
                     print "\n";
                     $| = $flush;
                     close($cmd);
+                    if ($?) {
+                        print "Error in '@cmd'.\n";
+                        $ret = 0;
+                    }
                 } else {
                     print STDERR "'@cmd' returned $ret\n";
                 }
@@ -351,38 +356,40 @@ end
     my $gdal = "gdal-$version";
     my $uri = gdal_source_location($version);
     my $ok = 1;
-    
-    print "get GDAL version $version\n";
-    my $code = sub {
-        if ($version eq '2.0.0' or $version eq '2.0.1') {
-            print "$version is buggy, get latest from 2.0 branch.\n";
-            $ok = $step->("svn", "checkout", "https://svn.osgeo.org/gdal/branches/2.0/gdal", "gdal");
-            $gdal = "gdal";
-        } 
-        elsif (-r "gdal-$version.tar.gz" and -s "gdal-$version.tar.gz") { # fetch leaves a zero sized file even when it fails
-            print "Using existing \"$gdal.tar.gz\"\n";
-            # extract into gdal
-            $ok = $step->("mkdir", "gdal");
-            $ok = $step->("tar", "zxf", "$gdal.tar.gz", "-C", "gdal", "--strip-components=1");
-        }
-        else {
-            print "Attempting to fetch '$uri'\n";
-            my $ff = File::Fetch->new(uri => $uri);
-            $ok = $ff->fetch() if $ff;
-            if ($ok) {
+
+    if (-d 'gdal') {
+        print "Directory gdal exists. Will assume it is a suitable GDAL source tree.\n";
+    } else {
+        print "get GDAL version $version\n";
+        my $code = sub {
+            if ($version eq '2.0.0' or $version eq '2.0.1') {
+                print "$version is buggy, get latest from 2.0 branch.\n";
+                $ok = $step->("svn", "checkout", "https://svn.osgeo.org/gdal/branches/2.0/gdal", "gdal");
+            } 
+            elsif (-r "gdal-$version.tar.gz" and -s "gdal-$version.tar.gz") { # fetch leaves a zero sized file even when it fails
+                print "Using existing \"$gdal.tar.gz\"\n";
                 # extract into gdal
                 $ok = $step->("mkdir", "gdal");
-                $ok = $step->("tar", "zxf", "$gdal.tar.gz", "-C", "gdal", "--strip-components=1");
-            } else {
-                print "No luck. Maybe this is the development version?\n";
-                $ok = $step->("svn", "checkout", "https://svn.osgeo.org/gdal/trunk/gdal", "gdal");
-                $gdal = "gdal";
+                $ok = $ok and $step->("tar", "zxf", "$gdal.tar.gz", "-C", "gdal", "--strip-components=1");
             }
-        }
-    };
-    my ($stdout, $stderr, $exit) = capture($code);
-    print $err $stderr;
-    print $log $stdout;
+            else {
+                print "Attempting to fetch '$uri'\n";
+                my $ff = File::Fetch->new(uri => $uri);
+                $ok = $ff->fetch() if $ff;
+                if ($ok) {
+                    # extract into gdal
+                    $ok = $step->("mkdir", "gdal");
+                    $ok = $ok and $step->("tar", "zxf", "$gdal.tar.gz", "-C", "gdal", "--strip-components=1");
+                } else {
+                    print "No luck. Maybe this is the development version?\n";
+                    $ok = $step->("svn", "checkout", "https://svn.osgeo.org/gdal/trunk/gdal", "gdal");
+                }
+            }
+        };
+        my ($stdout, $stderr, $exit) = capture($code);
+        print $err $stderr;
+        print $log $stdout;
+    }
     if ($ok) {
         for my $cmd (["cd", "gdal"],
                      ["./configure"],
@@ -395,15 +402,14 @@ end
     }
     close $log;
     close $err;
-    return "./gdal" if $ok;
+    return if $ok;
     chdir($pwd);
     open($err, "<", "gdal-build.err") 
         or die "Can't open gdal-build.err: $!.";
     my @err = <$err>;
     close $err;
-    die "Downloading and compiling of GDAL failed.\n".
-        "The error is probably explained by the error log.\n".
-        "It is '$pwd/gdal-build.err'.\n".
+    die "Downloading and/or compiling GDAL failed.\n".
+        "The error is probably explained by the error log:\n".
         "@err\n";
 }}
 
