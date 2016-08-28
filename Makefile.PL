@@ -63,10 +63,6 @@ if ($ARGV{'--gdal-source-tree'}) {
         die "Path '$source_tree' does not exist." unless -e $source_tree && -d $source_tree;
     }
 }
-elsif (-r '../../GDALmake.opt.in') {
-    $source_tree = '../..';
-    print "Building in source tree.\n" if $source_tree;
-}
 
 # Obtain the version of GDAL for this module distribution.
 
@@ -77,7 +73,7 @@ if (open(my $fh, "lib/Geo/GDAL.pm")) {
     }
     close $fh;
 } else {
-    die "GDAL Perl modules not found, perhaps you need to run make generate?";
+    die "GDAL Perl modules not found, your distribution is broken.";
 }
 
 # search and decide which GDAL (gdal-config) to build against if not given
@@ -105,7 +101,8 @@ if ($gdal_config) {
     my @configs;
     for ('c:/msys/1.0/local/bin/gdal-config',
          '/usr/local/bin/gdal-config',
-         '/usr/bin/gdal-config') {
+         '/usr/bin/gdal-config',
+         "$ENV{HOME}/usr/bin/gdal-config") {
         push @configs, $_ if -r $_;
     }
     if (@configs) {
@@ -165,30 +162,14 @@ if ($different_versions && !$gdal_config && !$versions_may_differ && $downloads_
     $config = "$source_tree/apps/gdal-config";
 }
 
-# still in the game?
-
-my $have_gnm = `grep "CONFIG_GNM_ENABLED" $config`;
-my $have_ogr = `grep "CONFIG_OGR_ENABLED" $config`;
-for ($have_gnm, $have_ogr) {
-    chomp;
-    $_ = /yes/ ? 1 : 0;
-}
-
-my ($INC, $LIB) = get_gdal_inc_lib($config);
-
-my %object = ( 'Geo::GDAL' => 'gdal_wrap.o',
-               'Geo::GDAL::Const' => 'gdalconst_wrap.o',
-               'Geo::OSR' => 'osr_wrap.o' );
-
-$object{'Geo::OGR'} = 'ogr_wrap.o' if $have_ogr;
-$object{'Geo::GNM'} = 'gnm_wrap.o' if $have_gnm;
+my ($INC, $LIB, $objects) = get_config($config);
 
 if ($ARGV{'--debug'}) {
     print "LIB = $LIB\n";
     print "INC = $INC\n";
 }
 
-for my $module (sort keys %object) {
+for my $module (sort keys %$objects) {
     my $add = $module;
     $add =~ s/:/_/g;
     my $LD = $Config{ld};
@@ -199,15 +180,15 @@ for my $module (sort keys %object) {
     $OPTIMIZE .= ' '.$ENV{CPPFLAGS} if $ENV{CFLAGS};
     
     my %PM = ( 'lib/Geo/GDAL.pm' => '$(INST_LIBDIR)/GDAL.pm',
+               'lib/Geo/OGR.pm' => '$(INST_LIBDIR)/OGR.pm',
                'lib/Geo/OSR.pm' => '$(INST_LIBDIR)/OSR.pm',
                'lib/Geo/GDAL/Const.pm' => '$(INST_LIBDIR)/GDAL/Const.pm' );
     
-    $PM{'lib/Geo/OGR.pm'} = '$(INST_LIBDIR)/OGR.pm' if $have_ogr;
-    $PM{'lib/Geo/GNM.pm'} = '$(INST_LIBDIR)/GNM.pm' if $have_gnm;
+    $PM{'lib/Geo/GNM.pm'} = '$(INST_LIBDIR)/GNM.pm' if $objects->{'Geo::GNM'};
 
     WriteMakefile( NAME => $module,
                    VERSION_FROM => 'lib/Geo/GDAL.pm',
-                   ABSTRACT_FROM => 'lib/Geo/GDAL.pm',
+                   ABSTRACT => 'Perl extension for the GDAL library for geospatial data',
                    AUTHOR => 'Ari Jolma <ari.jolma at gmail.com>',
                    LICENSE => 'mit',
                    META_MERGE => {
@@ -225,7 +206,7 @@ for my $module (sort keys %object) {
                    INC => $INC,
                    OPTIMIZE => $OPTIMIZE,
                    LD => $LD,
-                   OBJECT => $object{$module},
+                   OBJECT => $objects->{$module},
                    PM => \%PM,
                    CONFIGURE_REQUIRES => {
                        'strict' => 0,
@@ -431,19 +412,15 @@ sub get_gdal_version {
     return $version;
 }
 
-sub get_gdal_inc_lib {
+sub get_config {
     my $config = shift;
     my ($INC, $LIB) = ('', '');
-    if ($source_tree) {
+    my $objects = { 'Geo::GDAL' => 'gdal_wrap.o',
+                    'Geo::OGR' => 'ogr_wrap.o',
+                    'Geo::GDAL::Const' => 'gdalconst_wrap.o',
+                    'Geo::OSR' => 'osr_wrap.o' };
+    if ($source_tree or not(-x $config)) {
         $LIB = "-L$source_tree/.libs -L$source_tree -lgdal ";
-        chomp($INC = `$config --cflags`);
-        $INC .= " -I$source_tree/gnm " if $have_gnm;
-    }
-    elsif (-x $config) {
-        chomp($INC = `$config --cflags`);
-        chomp($LIB = `$config --libs`);
-    }
-    else {
         if (open(my $fh, $config) || die "Can't open '$config': $!") {
             for (<$fh>) {
                 if (/^CONFIG_LIBS/) {
@@ -466,11 +443,24 @@ sub get_gdal_inc_lib {
                     s/"\s*$//;
                     $INC .= $_;
                 }
+                if (/CONFIG_GNM_ENABLED/ and /yes/) {
+                    $INC .= " -I$source_tree/gnm ";
+                    $objects->{'Geo::GNM'} = 'gnm_wrap.o';
+                }
             }
             close $fh;
         }
+    } else {
+        chomp($INC = `$config --cflags`);
+        chomp($LIB = `$config --libs`);
+        my $ans;
+        chomp($ans = `$config --gnm-enabled`);
+        if ($ans eq 'yes') {
+            $INC .= " -I$source_tree/gnm ";
+            $objects->{'Geo::GNM'} = 'gnm_wrap.o';
+        }
     }
-    return ($INC, $LIB);
+    return ($INC, $LIB, $objects);
 }
 
 sub parse_libtool_library_file_for_l {

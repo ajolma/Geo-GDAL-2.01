@@ -1003,8 +1003,8 @@ use Geo::OSR;
 # Note that the 1/100000 digits may be used to create more than one
 # CPAN release from one GDAL release.
 
-our $VERSION = '2.010004';
-our $GDAL_VERSION = '2.1.0';
+our $VERSION = '2.010101';
+our $GDAL_VERSION = '2.1.1';
 
 =pod
 
@@ -1966,6 +1966,7 @@ sub Warped {
 
 sub Warp {
     my ($self, $dest, $options, $progress, $progress_data) = @_;
+    # can be run as object method (one dataset) and as package sub (a list of datasets)
     $options = Geo::GDAL::GDALWarpAppOptions->new(Geo::GDAL::make_processing_options($options));
     my $b = blessed($dest);
     $self = [$self] unless ref $self eq 'ARRAY';

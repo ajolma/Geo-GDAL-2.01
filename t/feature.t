@@ -3,7 +3,6 @@ use strict;
 use warnings;
 use bytes;
 use v5.10;
-use Config;
 use Test::More qw(no_plan);
 BEGIN { use_ok('Geo::GDAL') };
 
@@ -62,7 +61,7 @@ my $f = Geo::OGR::Feature->new(
     eval {
         $f->{10} = 'x';
     };
-    ok ($@ eq '', "Set field using hashref syntax and field index works.");
+    ok ($@ ne '', "Set field using hashref syntax and field index does not work.");
     eval {
         $f->{No} = 'x';
     };
@@ -106,13 +105,13 @@ my $f = Geo::OGR::Feature->new(
 {
     my $b = 123.456;
     my $c = $f->Field(Real => $b);
-    ok($b-$c < 0.001, "Set and get real field.");
+    ok("$b" eq "$c", "Set and get real field.");
 }
 
 {
     my $b = [123.456,2123.4567];
     my $c = $f->Field(RealList => $b);
-    ok(($b->[0]-$c->[0] < 0.001 and $b->[1]-$c->[1] < 0.001), "Set and get real list field.");
+    ok("@$b" eq "@$c", "Set and get real list field.");
 }
 
 {
@@ -128,29 +127,15 @@ my $f = Geo::OGR::Feature->new(
 }
 
 {
-    if ($Config{ivsize} < 8) {
-        use bigint;
-        my $b = 9223372036854775806;
-        my $c = $f->Field(Integer64 => $b);
-        ok($b eq $c, "Set and get integer64 field (with 'use bigint').");
-    } else {
-        my $b = 9223372036854775806;
-        my $c = $f->Field(Integer64 => $b);
-        ok($b eq $c, "Set and get integer64 field.");
-    }
+    my $b = 9223372036854775806;
+    my $c = $f->Field(Integer64 => $b);
+    ok($b eq $c, "Set and get integer64 field.");
 }
 
 {
-    if ($Config{ivsize} < 8) {
-        use bigint;
-        my $b = [9223372036854775806,12];
-        my $c = $f->Field(Integer64List => $b);
-        ok("@$b" eq "@$c", "Set and get integer64 list field (with 'use bigint').");
-    } else {
-        my $b = [9223372036854775806,12];
-        my $c = $f->Field(Integer64List => $b);
-        ok("@$b" eq "@$c", "Set and get integer64 list field (with 'use bigint').");
-    }
+    my $b = [9223372036854775806,12];
+    my $c = $f->Field(Integer64List => $b);
+    ok("@$b" eq "@$c", "Set and get integer64 list field.");
 }
 
 {

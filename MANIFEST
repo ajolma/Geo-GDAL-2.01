@@ -48,5 +48,5 @@ transform.dox
 check_dox.pl
 parse-for-doxygen.pl
 Changes-in-the-API-in-2.0
-META.yml                                 Module YAML meta-data (added by MakeMaker)
-META.json                                Module JSON meta-data (added by MakeMaker)
+MYMETA.yml
+MYMETA.json
