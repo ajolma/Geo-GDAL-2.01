@@ -1,5 +1,7 @@
 # This is the config file for building and testing Geo::OGC::Service::WFS with Travis-ci.org
 
+dist: trusty
+
 language: perl
 perl:
   - "5.10"
