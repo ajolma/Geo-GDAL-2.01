@@ -5,12 +5,15 @@ perl:
   - "5.10"
 
 before_install:
-  - sudo apt-get install libexpat-dev libpq-dev libgdal-dev
+  - sudo apt-get install libexpat-dev libpq-dev
+  - sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
+  - sudo apt-get update
+  - sudo apt-get install libgdal-dev
 
 install:
   - cpanm -v --installdeps --notest .
 
-script: "perl Makefile.PL; make test"
+script: "perl Makefile.PL --no-version-check; make test"
 
 branches:
   only:
