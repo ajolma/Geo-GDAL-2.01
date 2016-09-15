@@ -142,6 +142,7 @@ sub DESTROY {
 *SetTargetLinearUnits = *Geo::OSRc::SpatialReference_SetTargetLinearUnits;
 *SetLinearUnits = *Geo::OSRc::SpatialReference_SetLinearUnits;
 *SetLinearUnitsAndUpdateParameters = *Geo::OSRc::SpatialReference_SetLinearUnitsAndUpdateParameters;
+*GetTargetLinearUnits = *Geo::OSRc::SpatialReference_GetTargetLinearUnits;
 *GetLinearUnits = *Geo::OSRc::SpatialReference_GetLinearUnits;
 *GetLinearUnitsName = *Geo::OSRc::SpatialReference_GetLinearUnitsName;
 *GetAuthorityCode = *Geo::OSRc::SpatialReference_GetAuthorityCode;

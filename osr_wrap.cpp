@@ -2020,6 +2020,10 @@ SWIGINTERN OGRErr OSRSpatialReferenceShadow_SetLinearUnits(OSRSpatialReferenceSh
 SWIGINTERN OGRErr OSRSpatialReferenceShadow_SetLinearUnitsAndUpdateParameters(OSRSpatialReferenceShadow *self,char const *name,double to_meters){
     return OSRSetLinearUnitsAndUpdateParameters( self, name, to_meters );
   }
+SWIGINTERN double OSRSpatialReferenceShadow_GetTargetLinearUnits(OSRSpatialReferenceShadow *self,char const *target_key){
+    // Return code ignored.
+    return OSRGetTargetLinearUnits( self, target_key, 0 );
+  }
 SWIGINTERN double OSRSpatialReferenceShadow_GetLinearUnits(OSRSpatialReferenceShadow *self){
     // Return code ignored.
     return OSRGetLinearUnits( self, 0 );
@@ -4371,6 +4375,74 @@ XS(_wrap_SpatialReference_SetLinearUnitsAndUpdateParameters) {
       if (tmpbuf2) free(tmpbuf2);
     }
     
+    SWIG_croak_null();
+  }
+}
+
+
+XS(_wrap_SpatialReference_GetTargetLinearUnits) {
+  {
+    OSRSpatialReferenceShadow *arg1 = (OSRSpatialReferenceShadow *) 0 ;
+    char *arg2 = (char *) 0 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    int res2 ;
+    char *buf2 = 0 ;
+    int alloc2 = 0 ;
+    int argvi = 0;
+    double result;
+    dXSARGS;
+    
+    {
+      /* %typemap(default) const char * target_key */
+      arg2 = NULL;
+    }
+    if ((items < 1) || (items > 2)) {
+      SWIG_croak("Usage: SpatialReference_GetTargetLinearUnits(self,target_key);");
+    }
+    res1 = SWIG_ConvertPtr(ST(0), &argp1,SWIGTYPE_p_OSRSpatialReferenceShadow, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpatialReference_GetTargetLinearUnits" "', argument " "1"" of type '" "OSRSpatialReferenceShadow *""'"); 
+    }
+    arg1 = reinterpret_cast< OSRSpatialReferenceShadow * >(argp1);
+    if (items > 1) {
+      res2 = SWIG_AsCharPtrAndSize(ST(1), &buf2, NULL, &alloc2);
+      if (!SWIG_IsOK(res2)) {
+        SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "SpatialReference_GetTargetLinearUnits" "', argument " "2"" of type '" "char const *""'");
+      }
+      arg2 = reinterpret_cast< char * >(buf2);
+    }
+    {
+      CPLErrorReset();
+      result = (double)OSRSpatialReferenceShadow_GetTargetLinearUnits(arg1,(char const *)arg2);
+      CPLErr eclass = CPLGetLastErrorType();
+      if ( eclass == CE_Failure || eclass == CE_Fatal ) {
+        do_confess( CPLGetLastErrorMsg(), 0 );
+        
+        
+        
+        
+        
+      }
+      
+      
+      /*
+          Make warnings regular Perl warnings. This duplicates the warning
+          message if DontUseExceptions() is in effect (it is not by default).
+          */
+      if ( eclass == CE_Warning ) {
+        warn( CPLGetLastErrorMsg(), "%s" );
+      }
+      
+      
+    }
+    ST(argvi) = SWIG_From_double  SWIG_PERL_CALL_ARGS_1(static_cast< double >(result)); argvi++ ;
+    
+    if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+    XSRETURN(argvi);
+  fail:
+    
+    if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
     SWIG_croak_null();
   }
 }
@@ -13600,6 +13672,7 @@ static swig_command_info swig_commands[] = {
 {"Geo::OSRc::SpatialReference_SetTargetLinearUnits", _wrap_SpatialReference_SetTargetLinearUnits},
 {"Geo::OSRc::SpatialReference_SetLinearUnits", _wrap_SpatialReference_SetLinearUnits},
 {"Geo::OSRc::SpatialReference_SetLinearUnitsAndUpdateParameters", _wrap_SpatialReference_SetLinearUnitsAndUpdateParameters},
+{"Geo::OSRc::SpatialReference_GetTargetLinearUnits", _wrap_SpatialReference_GetTargetLinearUnits},
 {"Geo::OSRc::SpatialReference_GetLinearUnits", _wrap_SpatialReference_GetLinearUnits},
 {"Geo::OSRc::SpatialReference_GetLinearUnitsName", _wrap_SpatialReference_GetLinearUnitsName},
 {"Geo::OSRc::SpatialReference_GetAuthorityCode", _wrap_SpatialReference_GetAuthorityCode},

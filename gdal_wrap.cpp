@@ -2451,7 +2451,7 @@ CPLErr DSReadRaster_internal( GDALDatasetShadow *obj,
   }
   else
   {
-    CPLError(CE_Failure, CPLE_OutOfMemory, "Not enough memory to allocate "CPL_FRMT_GIB" bytes", *buf_size);
+    CPLError(CE_Failure, CPLE_OutOfMemory, "Not enough memory to allocate " CPL_FRMT_GIB " bytes", *buf_size);
     result = CE_Failure;
     *buf = 0;
     *buf_size = 0;
@@ -2868,7 +2868,7 @@ CPLErr ReadRaster_internal( GDALRasterBandShadow *obj,
   }
   else
   {
-    CPLError(CE_Failure, CPLE_OutOfMemory, "Not enough memory to allocate "CPL_FRMT_GIB" bytes", *buf_size);
+    CPLError(CE_Failure, CPLE_OutOfMemory, "Not enough memory to allocate " CPL_FRMT_GIB " bytes", *buf_size);
     result = CE_Failure;
     *buf = 0;
     *buf_size = 0;
@@ -23687,7 +23687,7 @@ XS(_wrap_GetCacheMax) {
     }
     {
       char temp[256];
-      sprintf(temp, ""CPL_FRMT_GIB"", result);
+      sprintf(temp, "" CPL_FRMT_GIB "", result);
       ST(argvi) = sv_2mortal(newSVpv(temp, 0));
       argvi++;
     }
@@ -23733,7 +23733,7 @@ XS(_wrap_GetCacheUsed) {
     }
     {
       char temp[256];
-      sprintf(temp, ""CPL_FRMT_GIB"", result);
+      sprintf(temp, "" CPL_FRMT_GIB "", result);
       ST(argvi) = sv_2mortal(newSVpv(temp, 0));
       argvi++;
     }
@@ -24378,9 +24378,9 @@ XS(_wrap_SerializeXMLTree) {
       if ( !arg1 ) {
         switch (err) {
         case 1:
-          do_confess(ARRAY_TO_XML_FAILED" "NEED_DEF, 1);
+          do_confess(ARRAY_TO_XML_FAILED " " NEED_DEF, 1);
         case 2:
-          do_confess(ARRAY_TO_XML_FAILED" "NEED_ARRAY_REF, 1);
+          do_confess(ARRAY_TO_XML_FAILED " " NEED_ARRAY_REF, 1);
         }
       }
     }
