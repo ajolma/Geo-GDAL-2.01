@@ -1003,8 +1003,8 @@ use Geo::OSR;
 # Note that the 1/100000 digits may be used to create more than one
 # CPAN release from one GDAL release.
 
-our $VERSION = '2.010102';
-our $GDAL_VERSION = '2.1.1';
+our $VERSION = '2.010201';
+our $GDAL_VERSION = '2.1.2';
 
 =pod
 
@@ -1825,10 +1825,10 @@ sub GCPs {
 }
 
 sub ReadTile {
-    my ($self, $xoff, $yoff, $xsize, $ysize) = @_;
+    my ($self, $xoff, $yoff, $xsize, $ysize, $w_tile, $h_tile, $alg) = @_;
     my @data;
     for my $i (0..$self->Bands-1) {
-        $data[$i] = $self->Band($i+1)->ReadTile($xoff, $yoff, $xsize, $ysize);
+        $data[$i] = $self->Band($i+1)->ReadTile($xoff, $yoff, $xsize, $ysize, $w_tile, $h_tile, $alg);
     }
     return \@data;
 }
@@ -2265,19 +2265,23 @@ sub ScaleAndOffset {
 }
 
 sub ReadTile {
-    my($self, $xoff, $yoff, $xsize, $ysize) = @_;
+    my($self, $xoff, $yoff, $xsize, $ysize, $w_tile, $h_tile, $alg) = @_;
     $xoff //= 0;
     $yoff //= 0;
     $xsize //= $self->{XSize} - $xoff;
     $ysize //= $self->{YSize} - $yoff;
+    $w_tile //= $xsize;
+    $h_tile //= $ysize;
+    $alg //= 'NearestNeighbour';
     my $t = $self->{DataType};
-    my $buf = $self->_ReadRaster($xoff, $yoff, $xsize, $ysize, $xsize, $ysize, $t, 0, 0, $Geo::GDAL::Const::GRIORA_NearestNeighbour);
+    $alg = Geo::GDAL::string2int($alg, \%Geo::GDAL::RIO_RESAMPLING_STRING2INT);
+    my $buf = $self->_ReadRaster($xoff, $yoff, $xsize, $ysize, $w_tile, $h_tile, $t, 0, 0, $alg);
     my $pc = Geo::GDAL::PackCharacter($t);
-    my $w = $xsize * Geo::GDAL::GetDataTypeSize($t)/8;
+    my $w = $w_tile * Geo::GDAL::GetDataTypeSize($t)/8;
     my $offset = 0;
     my @data;
-    for my $y (0..$ysize-1) {
-        my @d = unpack($pc."[$xsize]", substr($buf, $offset, $w));
+    for my $y (0..$h_tile-1) {
+        my @d = unpack($pc."[$w_tile]", substr($buf, $offset, $w));
         push @data, \@d;
         $offset += $w;
     }
@@ -2474,12 +2478,12 @@ sub CreateMaskBand {
 
 sub Piddle {
     # TODO: add Piddle sub to dataset too to make Width x Height x Bands piddles
-    error("PDL is not available.") unless $Geo::GDAL::HAVE_PDL;
+    Geo::GDAL::error("PDL is not available.") unless $Geo::GDAL::HAVE_PDL;
     my $self = shift;
     my $t = $self->{DataType};
     unless (defined wantarray) {
         my $pdl = shift;
-        error("The datatype of the Piddle and the band do not match.") unless $PDL2DATATYPE{$pdl->get_datatype} == $t;
+        Geo::GDAL::error("The datatype of the Piddle and the band do not match.") unless $PDL2DATATYPE{$pdl->get_datatype} == $t;
         my ($xoff, $yoff, $xsize, $ysize) = @_;
         $xoff //= 0;
         $yoff //= 0;
@@ -2510,7 +2514,7 @@ sub Piddle {
     my $buf = $self->_ReadRaster($xoff, $yoff, $xsize, $ysize, $xdim, $ydim, $t, 0, 0, $alg);
     my $pdl = PDL->new;
     my $datatype = $DATATYPE2PDL{$t};
-    error("The band datatype is not supported by PDL.") if $datatype < 0;
+    Geo::GDAL::error("The band datatype is not supported by PDL.") if $datatype < 0;
     $pdl->set_datatype($datatype);
     $pdl->setdims([$xdim, $ydim]);
     my $data = $pdl->get_dataref();

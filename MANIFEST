@@ -30,6 +30,7 @@ t/ogr.t
 t/open.t
 t/osr.t
 t/parenting.t
+t/pdl.t
 t/utf8.t
 t/util.t
 Makefile.PL
