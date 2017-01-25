@@ -4,6 +4,7 @@ use File::Basename;
 use ExtUtils::MakeMaker;
 use Config;
 use Cwd;
+use File::ShareDir::Install;
 
 # pick up our parameters from @ARGV
 my %ARGV;
@@ -169,6 +170,8 @@ if ($ARGV{'--debug'}) {
     print "INC = $INC\n";
 }
 
+install_share 'share';
+
 for my $module (sort keys %$objects) {
     my $add = $module;
     $add =~ s/:/_/g;
@@ -226,7 +229,9 @@ for my $module (sort keys %$objects) {
                        'Config' => 0,
                        'File::Fetch' => 0,
                        'Capture::Tiny' => 0,
-                       'Cwd' => 0 
+                       'Cwd' => 0,
+		       'File::ShareDir::Install' => 0,
+		       'LWP::Simple' => 0
                    },
                    PREREQ_PM => {
                        Carp => 0,
@@ -243,13 +248,13 @@ for my $module (sort keys %$objects) {
         );
 }
 
-sub gdal_source_location {
-    my $version = shift;
-    return "http://download.osgeo.org/gdal/$version/gdal-$version.tar.gz";
-}
-
 sub download_and_compile_gdal {
     my ($version, $got_version) = @_;
+    my @version = split /\./, $version;
+    my @got_version = (0,0,0);
+    @got_version = split /\./, $got_version if defined $got_version;
+    die "Bad GDAL version numbers: $version or $got_version" 
+	if @version != 3 || @got_version != 3;
     
     if (not defined $got_version) {
         print STDERR <<end;
@@ -264,7 +269,7 @@ different from what this module was built against ($version) I will be
 back here.
 end
 
-    } else {
+    } elsif ($version[0] != $got_version[0] || $version[1] != $got_version[1]) {
         print STDERR <<end;
 
 The GDAL development files you gave or I found have a different
@@ -277,7 +282,7 @@ being adventurous by specifying --no-version-check or setting the
 environment variable PERL_GDAL_NO_VERSION_CHECK.
 end
 
-}
+    }
     print STDERR <<end;
 
 Note that this automatic download and compile is mostly meant for
@@ -292,7 +297,9 @@ end
 { 
     require File::Fetch;
     require Capture::Tiny;
+    require LWP::Simple;
     Capture::Tiny->import(':all');
+    LWP::Simple->import('head');
     my $pwd = cwd();
     open(my $log, ">", "gdal-build.log") 
         or die "Can't open gdal-build.log: $!.";
@@ -317,7 +324,7 @@ end
                         print "#" if $i % 50 == 0;
                         $i++;
                     }
-                    print "\n";
+                    print "\n" if $i;
                     $| = $flush;
                     close($cmd);
                     if ($?) {
@@ -334,43 +341,50 @@ end
         return $ret;
     };
 
-    my $gdal = "gdal-$version";
-    my $uri = gdal_source_location($version);
     my $ok = 1;
 
+    # get source code
     if (-d 'gdal') {
         print "Directory gdal exists. Will assume it is a suitable GDAL source tree.\n";
     } else {
-        print "get GDAL version $version\n";
-        my $code = sub {
-            if ($version eq '2.0.0' or $version eq '2.0.1') {
-                print "$version is buggy, get latest from 2.0 branch.\n";
-                $ok = $step->("svn", "checkout", "https://svn.osgeo.org/gdal/branches/2.0/gdal", "gdal");
-            } 
-            elsif (-r "gdal-$version.tar.gz" and -s "gdal-$version.tar.gz") { # fetch leaves a zero sized file even when it fails
-                print "Using existing \"$gdal.tar.gz\"\n";
-                # extract into gdal
-                $ok = $step->("mkdir", "gdal");
-                $ok = $ok and $step->("tar", "zxf", "$gdal.tar.gz", "-C", "gdal", "--strip-components=1");
-            }
-            else {
-                print "Attempting to fetch '$uri'\n";
-                my $ff = File::Fetch->new(uri => $uri);
-                $ok = $ff->fetch() if $ff;
-                if ($ok) {
-                    # extract into gdal
-                    $ok = $step->("mkdir", "gdal");
-                    $ok = $ok and $step->("tar", "zxf", "$gdal.tar.gz", "-C", "gdal", "--strip-components=1");
-                } else {
-                    print "No luck. Maybe this is the development version?\n";
-                    $ok = $step->("svn", "checkout", "https://svn.osgeo.org/gdal/trunk/gdal", "gdal");
-                }
-            }
-        };
-        my ($stdout, $stderr, $exit) = capture($code);
-        print $err $stderr;
-        print $log $stdout;
+	my $ext = 'tar.xz';
+	print "Find the latest revision of GDAL version ".join('.',@version[0..1])."\n";
+	my $url;
+	while (1) {
+	    my $test_version = join '.', @version;
+	    my $test_url = "http://download.osgeo.org/gdal/$test_version/gdal-$test_version.$ext";
+	    if (head($test_url)) {
+		print "found $test_version\n";
+		    $version = $test_version;
+		$url = $test_url;
+	    } else {
+		print "$test_version not found\n";
+		--$version[2];
+		last;
+	    }
+	    ++$version[2];
+	}
+	if ($url) {
+	    my $gdal = "gdal-$version.$ext";
+	    if (-r $gdal and -s $gdal) { 
+		# fetch leaves a zero sized file even when it fails
+		print "Using existing \"$gdal\"\n";
+	    } else {
+		print "Attempting to fetch '$url'\n";
+		my $ff = File::Fetch->new(uri => $url);
+		$ok = $ff->fetch if $ff;
+	    }
+	    if ($ok) {
+		# extract into gdal
+		$ok = $step->("mkdir", "gdal");
+		$ok = $ok && $step->("tar", "xf", $gdal, "-C", "gdal", "--strip-components=1");
+	    }
+	} else {
+	    print "No luck. Maybe this is the development version?\n";
+	    $ok = $step->("svn", "checkout", "https://svn.osgeo.org/gdal/trunk/gdal", "gdal");
+	}
     }
+    # configure and compile
     if ($ok) {
         for my $cmd (["cd", "gdal"],
                      ["./configure"],
@@ -380,6 +394,11 @@ end
             $ok = $step->(@$cmd);
             last unless $ok;
         }
+	if ($ok) {
+	    # copy GDAL data files to a shared dir
+	    $step->('mkdir', 'share');
+	    $step->('cp', 'gdal/data/*', 'share');
+	}
     }
     close $log;
     close $err;
@@ -481,3 +500,6 @@ sub parse_libtool_library_file_for_l {
     }
     return $l;
 }
+
+package MY;
+use File::ShareDir::Install qw(postamble);
