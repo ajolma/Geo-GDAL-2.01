@@ -119,14 +119,9 @@ if ($gdal_config) {
 
 if (!$config && $downloads_are_ok) {
     $source_tree = "./gdal";
+    download_and_compile_gdal($my_gdal_version);
     $config = "$source_tree/apps/gdal-config";
-    unless (-e $config) {
-        download_and_compile_gdal($my_gdal_version);
-        $config = "$source_tree/apps/gdal-config";
-    }
 }
-
-my $uri = gdal_source_location($my_gdal_version);
 
 my $gdal_version = get_gdal_version($config);
 my $different_versions = $my_gdal_version ne $gdal_version;
@@ -138,8 +133,8 @@ from the version these bindings were developed for (I have
 $my_gdal_version and $config has $gdal_version). 
 You can either
 
-- get GDAL development files from $uri or from wherever you get
-  development files for your system,
+- get GDAL development files from http://download.osgeo.org/gdal/ or
+  from wherever you get development files for your system,
 
 - specify another gdal-config,
 
@@ -170,7 +165,7 @@ if ($ARGV{'--debug'}) {
     print "INC = $INC\n";
 }
 
-install_share 'share';
+install_share 'gdal/data' if -d 'gdal';
 
 for my $module (sort keys %$objects) {
     my $add = $module;
@@ -376,7 +371,7 @@ end
 	    }
 	    if ($ok) {
 		# extract into gdal
-		$ok = $step->("mkdir", "gdal");
+		$ok = $step->("mkdir", "gdal") unless -d 'gdal';
 		$ok = $ok && $step->("tar", "xf", $gdal, "-C", "gdal", "--strip-components=1");
 	    }
 	} else {
@@ -385,7 +380,9 @@ end
 	}
     }
     # configure and compile
-    if ($ok) {
+    if ($ok && -r 'gdal/apps/gdal-config') {
+	print "The GDAL in gdal seems to be compiled.\n";
+    } elsif ($ok) {
         for my $cmd (["cd", "gdal"],
                      ["./configure"],
                      [($^O =~ /bsd/i ? "gmake" : "make"), "-j4"],
@@ -394,11 +391,6 @@ end
             $ok = $step->(@$cmd);
             last unless $ok;
         }
-	if ($ok) {
-	    # copy GDAL data files to a shared dir
-	    $step->('mkdir', 'share');
-	    $step->('cp', 'gdal/data/*', 'share');
-	}
     }
     close $log;
     close $err;
