@@ -68,14 +68,21 @@ if ($ARGV{'--gdal-source-tree'}) {
 # Obtain the version of GDAL for this module distribution.
 
 my $my_gdal_version;
+my @my_gdal_version;
 if (open(my $fh, "lib/Geo/GDAL.pm")) {
     for (<$fh>) {
-        ($my_gdal_version) = /(\d+\.\d+\.\d+)/ if /GDAL_VERSION/;
+        if (/GDAL_VERSION/ && /\d+\.\d+\.\d+/) {
+            ($my_gdal_version) = /(\d+\.\d+\.\d+)/;
+            last;
+        }
     }
     close $fh;
 } else {
-    die "GDAL Perl modules not found, your distribution is broken.";
+    die "'lib/Geo/GDAL.pm' not found, your distribution is broken.";
 }
+die "There is no GDAL version number in 'lib/Geo/GDAL.pm'." unless $my_gdal_version;
+@my_gdal_version = split /\./, $my_gdal_version;
+die "Bad GDAL version number in 'lib/Geo/GDAL.pm': $my_gdal_version" if @my_gdal_version != 3;
 
 # search and decide which GDAL (gdal-config) to build against if not given
 
@@ -124,7 +131,10 @@ if (!$config && $downloads_are_ok) {
 }
 
 my $gdal_version = get_gdal_version($config);
-my $different_versions = $my_gdal_version ne $gdal_version;
+my @gdal_version = split /\./, $gdal_version;
+die "Bad GDAL version number: $gdal_version" if @gdal_version != 3;
+
+my $different_versions = "@gdal_version[0..1]" ne "@my_gdal_version[0..1]";
 
 my $msg = <<end;
 
