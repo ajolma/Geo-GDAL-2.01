@@ -2,6 +2,7 @@ MANIFEST
 Changes
 Doxyfile
 README
+About
 Makefile
 make.bat
 lib/Geo/GDAL/Const.pm

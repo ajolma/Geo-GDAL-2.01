@@ -19,10 +19,12 @@ but may include changes from the trunk. These changes are currently:
 
 * PDL support
 
-* GeoTransform method Apply adjusts to point in addition to points
+* GeoTransform.Apply adjusts to point in addition to points
 
-* Fix for GeoTransform method Inv
+* Fix for GeoTransform.Inv
 
-* Fix for Layer method SpatialReference
+* Fix for Layer.SpatialReference
 
-* Detect 64bit Integer fields in Feature method SetField
+* Detect 64bit Integer fields in Feature.SetField
+
+* Fix for connectedness in Band.Polygonize
