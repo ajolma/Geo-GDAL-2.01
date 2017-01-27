@@ -1,4 +1,9 @@
-2.1 <release date here>
+See About for additional changes
+
+For changes after 2.1.0 see Release News files at
+https://trac.osgeo.org/gdal/wiki/DownloadSource
+
+2.1 May 2, 2016
   [Enhancements/changes in the API]
   * The output from a GDAL driver can be redirected to a write method
     of a class.

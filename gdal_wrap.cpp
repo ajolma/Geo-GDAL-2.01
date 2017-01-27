@@ -2008,9 +2008,10 @@ SWIG_From_int  SWIG_PERL_DECL_ARGS_1(int value)
 }
 
 
-    char *sv_to_utf8_string(SV *sv, U8 **tmpbuf) {
+char *sv_to_utf8_string(SV *sv, U8 **tmpbuf, bool *safefree = NULL) {
         /* if tmpbuf, only tmpbuf is freed; if not, ret is freed*/
         char *ret;
+        if (safefree) *safefree = false;
         if (SvOK(sv)) {
             STRLEN len;
             ret = SvPV(sv, len);
@@ -2021,6 +2022,7 @@ SWIG_From_int  SWIG_PERL_DECL_ARGS_1(int value)
                 } else {
                     ret = (char *)bytes_to_utf8((const U8*)ret, &len);
                 }
+                if (safefree) *safefree = true;
             } else {
                 if (!tmpbuf)
                     ret = strdup(ret);
@@ -3646,9 +3648,10 @@ void wrapper_GDALSetCacheMax(GIntBig nBytes)
 
         nType = SvIV(*(av_fetch(av,0,0)));
         SV *sv = *(av_fetch(av,1,0));
-        char *tmp = sv_to_utf8_string(sv, NULL);
+        bool sf;
+        char *tmp = sv_to_utf8_string(sv, NULL, &sf);
         psThisNode = CPLCreateXMLNode(NULL, (CPLXMLNodeType)nType, tmp);
-        free(tmp);
+        if (sf) Safefree(tmp); else free(tmp);
 
         for( iChild = 0; iChild < nChildCount; iChild++ )
         {
@@ -5250,13 +5253,13 @@ XS(_wrap_PushFinderLocation) {
     }
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     XSRETURN(argvi);
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     SWIG_croak_null();
   }
@@ -5416,14 +5419,14 @@ XS(_wrap_FindFile) {
     if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -5522,14 +5525,14 @@ XS(_wrap_ReadDir) {
     }
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     XSRETURN(argvi);
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     SWIG_croak_null();
@@ -5619,13 +5622,13 @@ XS(_wrap_ReadDirRecursive) {
     }
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     XSRETURN(argvi);
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     SWIG_croak_null();
   }
@@ -5988,7 +5991,7 @@ XS(_wrap_FileFromMemBuffer) {
     }
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     
@@ -5996,7 +5999,7 @@ XS(_wrap_FileFromMemBuffer) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     
@@ -6060,7 +6063,7 @@ XS(_wrap_Unlink) {
     }
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     {
       /* %typemap(ret) VSI_RETVAL */
@@ -6072,7 +6075,7 @@ XS(_wrap_Unlink) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     SWIG_croak_null();
   }
@@ -6185,7 +6188,7 @@ XS(_wrap_Mkdir) {
     }
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     {
@@ -6198,7 +6201,7 @@ XS(_wrap_Mkdir) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     SWIG_croak_null();
@@ -6261,7 +6264,7 @@ XS(_wrap_Rmdir) {
     }
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     {
       /* %typemap(ret) VSI_RETVAL */
@@ -6273,7 +6276,7 @@ XS(_wrap_Rmdir) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     SWIG_croak_null();
   }
@@ -6352,11 +6355,11 @@ XS(_wrap_Rename) {
     }
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     {
       /* %typemap(ret) VSI_RETVAL */
@@ -6368,11 +6371,11 @@ XS(_wrap_Rename) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -6456,7 +6459,7 @@ XS(_wrap_Stat) {
     }
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     {
@@ -6469,7 +6472,7 @@ XS(_wrap_Stat) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     SWIG_croak_null();
@@ -6541,14 +6544,14 @@ XS(_wrap_VSIFOpenL) {
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_void, 0 | 0); argvi++ ;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
     XSRETURN(argvi);
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
     SWIG_croak_null();
@@ -6630,7 +6633,7 @@ XS(_wrap_VSIFOpenExL) {
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_void, 0 | 0); argvi++ ;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
     
@@ -6638,7 +6641,7 @@ XS(_wrap_VSIFOpenExL) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
     
@@ -7250,13 +7253,13 @@ XS(_wrap_ParseCommandLine) {
     }
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     XSRETURN(argvi);
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     SWIG_croak_null();
   }
@@ -8244,9 +8247,10 @@ XS(_wrap_Driver__Create) {
               AV *av = (AV*)(SvRV(ST(6)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf;
+                char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg7 = CSLAddString(arg7, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(6)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(6));
@@ -8256,9 +8260,10 @@ XS(_wrap_Driver__Create) {
               arg7 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                  bool sf;
+                  char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg7 = CSLAddNameValue(arg7, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -8300,7 +8305,7 @@ XS(_wrap_Driver__Create) {
     
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     
@@ -8315,7 +8320,7 @@ XS(_wrap_Driver__Create) {
     
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     
@@ -8400,9 +8405,10 @@ XS(_wrap_Driver__CreateCopy) {
               AV *av = (AV*)(SvRV(ST(4)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf;
+                char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg5 = CSLAddString(arg5, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(4)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(4));
@@ -8412,9 +8418,10 @@ XS(_wrap_Driver__CreateCopy) {
               arg5 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                  bool sf;
+                  char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg5 = CSLAddNameValue(arg5, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -8485,7 +8492,7 @@ XS(_wrap_Driver__CreateCopy) {
     
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     
@@ -8499,7 +8506,7 @@ XS(_wrap_Driver__CreateCopy) {
     
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     
@@ -8577,14 +8584,14 @@ XS(_wrap_Driver_Delete) {
     
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -12304,9 +12311,10 @@ XS(_wrap_Dataset__AddBand) {
               AV *av = (AV*)(SvRV(ST(2)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf;
+                char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg3 = CSLAddString(arg3, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(2)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(2));
@@ -12316,9 +12324,10 @@ XS(_wrap_Dataset__AddBand) {
               arg3 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
-                arg3 = CSLAddNameValue(arg3, key, tmp);
-                free(tmp);
+                  bool sf;
+                  char *tmp = sv_to_utf8_string(sv, NULL, &sf);
+                  arg3 = CSLAddNameValue(arg3, key, tmp);
+                  if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -13113,9 +13122,10 @@ XS(_wrap_Dataset__CreateLayer) {
               AV *av = (AV*)(SvRV(ST(4)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf;
+                char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg5 = CSLAddString(arg5, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(4)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(4));
@@ -13125,9 +13135,10 @@ XS(_wrap_Dataset__CreateLayer) {
               arg5 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                  bool sf;
+                  char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg5 = CSLAddNameValue(arg5, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -13237,9 +13248,10 @@ XS(_wrap_Dataset_CopyLayer) {
               AV *av = (AV*)(SvRV(ST(3)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf;
+                char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddString(arg4, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(3)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(3));
@@ -13249,9 +13261,10 @@ XS(_wrap_Dataset_CopyLayer) {
               arg4 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                  bool sf;
+                  char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddNameValue(arg4, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -13560,14 +13573,14 @@ XS(_wrap_Dataset_GetLayerByName) {
     
     {
       /* %typemap(freearg) (const char* layer_name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     
     {
       /* %typemap(freearg) (const char* layer_name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -15092,9 +15105,10 @@ XS(_wrap_Band_SetRasterCategoryNames) {
             AV *av = (AV*)(SvRV(ST(1)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf;
+              char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg2 = CSLAddString(arg2, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(1)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(1));
@@ -15104,9 +15118,10 @@ XS(_wrap_Band_SetRasterCategoryNames) {
             arg2 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf;
+                char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg2 = CSLAddNameValue(arg2, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);
@@ -17950,9 +17965,10 @@ XS(_wrap_Band_SetCategoryNames) {
             AV *av = (AV*)(SvRV(ST(1)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf;
+              char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg2 = CSLAddString(arg2, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(1)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(1));
@@ -17962,9 +17978,10 @@ XS(_wrap_Band_SetCategoryNames) {
             arg2 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf;
+                char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg2 = CSLAddNameValue(arg2, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);
@@ -19622,7 +19639,7 @@ XS(_wrap_RasterAttributeTable_SetValueAsString) {
     
     {
       /* %typemap(freearg) (tostring argin) */
-      if (tmpbuf4) free(tmpbuf4);
+      if (tmpbuf4) Safefree(tmpbuf4);
     }
     XSRETURN(argvi);
   fail:
@@ -19631,7 +19648,7 @@ XS(_wrap_RasterAttributeTable_SetValueAsString) {
     
     {
       /* %typemap(freearg) (tostring argin) */
-      if (tmpbuf4) free(tmpbuf4);
+      if (tmpbuf4) Safefree(tmpbuf4);
     }
     SWIG_croak_null();
   }
@@ -20749,9 +20766,10 @@ XS(_wrap__ReprojectImage) {
               AV *av = (AV*)(SvRV(ST(9)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf;
+                char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg10 = CSLAddString(arg10, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(9)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(9));
@@ -20761,9 +20779,10 @@ XS(_wrap__ReprojectImage) {
               arg10 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                  bool sf;
+                  char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg10 = CSLAddNameValue(arg10, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -20880,9 +20899,10 @@ XS(_wrap_ComputeProximity) {
               AV *av = (AV*)(SvRV(ST(2)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf;
+                char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg3 = CSLAddString(arg3, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(2)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(2));
@@ -20892,9 +20912,10 @@ XS(_wrap_ComputeProximity) {
               arg3 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                  bool sf;
+                  char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg3 = CSLAddNameValue(arg3, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -21081,9 +21102,10 @@ XS(_wrap_RasterizeLayer) {
               AV *av = (AV*)(SvRV(ST(6)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf;
+                char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg9 = CSLAddString(arg9, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(6)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(6));
@@ -21093,9 +21115,10 @@ XS(_wrap_RasterizeLayer) {
               arg9 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                  bool sf;
+                  char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg9 = CSLAddNameValue(arg9, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -21262,9 +21285,10 @@ XS(_wrap__Polygonize) {
               AV *av = (AV*)(SvRV(ST(4)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf;
+                char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg5 = CSLAddString(arg5, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(4)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(4));
@@ -21274,9 +21298,10 @@ XS(_wrap__Polygonize) {
               arg5 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                  bool sf;
+                  char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg5 = CSLAddNameValue(arg5, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -21427,9 +21452,9 @@ XS(_wrap_FPolygonize) {
               AV *av = (AV*)(SvRV(ST(4)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg5 = CSLAddString(arg5, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(4)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(4));
@@ -21439,9 +21464,9 @@ XS(_wrap_FPolygonize) {
               arg5 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg5 = CSLAddNameValue(arg5, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -21592,9 +21617,9 @@ XS(_wrap_FillNodata) {
               AV *av = (AV*)(SvRV(ST(4)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg5 = CSLAddString(arg5, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(4)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(4));
@@ -21604,9 +21629,9 @@ XS(_wrap_FillNodata) {
               arg5 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg5 = CSLAddNameValue(arg5, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -21762,9 +21787,9 @@ XS(_wrap_SieveFilter) {
               AV *av = (AV*)(SvRV(ST(5)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg6 = CSLAddString(arg6, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(5)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(5));
@@ -21774,9 +21799,9 @@ XS(_wrap_SieveFilter) {
               arg6 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg6 = CSLAddNameValue(arg6, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -22556,9 +22581,9 @@ XS(_wrap_new_Transformer) {
             AV *av = (AV*)(SvRV(ST(2)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg3 = CSLAddString(arg3, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(2)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(2));
@@ -22568,9 +22593,9 @@ XS(_wrap_new_Transformer) {
             arg3 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg3 = CSLAddNameValue(arg3, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);
@@ -23225,9 +23250,9 @@ XS(_wrap_Transformer_TransformGeolocations) {
               AV *av = (AV*)(SvRV(ST(6)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg7 = CSLAddString(arg7, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(6)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(6));
@@ -23237,9 +23262,9 @@ XS(_wrap_Transformer_TransformGeolocations) {
               arg7 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg7 = CSLAddNameValue(arg7, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -24464,9 +24489,9 @@ XS(_wrap_GetJPEG2000StructureAsString) {
               AV *av = (AV*)(SvRV(ST(1)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg2 = CSLAddString(arg2, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(1)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(1));
@@ -24476,9 +24501,9 @@ XS(_wrap_GetJPEG2000StructureAsString) {
               arg2 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg2 = CSLAddNameValue(arg2, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -24877,14 +24902,14 @@ XS(_wrap__Open) {
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GDALDatasetShadow, SWIG_OWNER | SWIG_SHADOW); argvi++ ;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     XSRETURN(argvi);
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     SWIG_croak_null();
@@ -24935,9 +24960,9 @@ XS(_wrap__OpenEx) {
               AV *av = (AV*)(SvRV(ST(2)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg3 = CSLAddString(arg3, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(2)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(2));
@@ -24947,9 +24972,9 @@ XS(_wrap__OpenEx) {
               arg3 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg3 = CSLAddNameValue(arg3, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -24967,9 +24992,9 @@ XS(_wrap__OpenEx) {
               AV *av = (AV*)(SvRV(ST(3)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddString(arg4, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(3)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(3));
@@ -24979,9 +25004,9 @@ XS(_wrap__OpenEx) {
               arg4 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddNameValue(arg4, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -24999,9 +25024,9 @@ XS(_wrap__OpenEx) {
               AV *av = (AV*)(SvRV(ST(4)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg5 = CSLAddString(arg5, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(4)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(4));
@@ -25011,9 +25036,9 @@ XS(_wrap__OpenEx) {
               arg5 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg5 = CSLAddNameValue(arg5, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -25054,7 +25079,7 @@ XS(_wrap__OpenEx) {
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GDALDatasetShadow, SWIG_OWNER | SWIG_SHADOW); argvi++ ;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     {
@@ -25073,7 +25098,7 @@ XS(_wrap__OpenEx) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     {
@@ -25156,14 +25181,14 @@ XS(_wrap__OpenShared) {
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GDALDatasetShadow, SWIG_OWNER | SWIG_SHADOW); argvi++ ;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     XSRETURN(argvi);
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     SWIG_croak_null();
@@ -25202,9 +25227,9 @@ XS(_wrap_IdentifyDriver) {
               AV *av = (AV*)(SvRV(ST(1)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg2 = CSLAddString(arg2, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(1)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(1));
@@ -25214,9 +25239,9 @@ XS(_wrap_IdentifyDriver) {
               arg2 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg2 = CSLAddNameValue(arg2, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -25257,7 +25282,7 @@ XS(_wrap_IdentifyDriver) {
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GDALDriverShadow, 0 | SWIG_SHADOW); argvi++ ;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     {
       /* %typemap(freearg) char **options */
@@ -25267,7 +25292,7 @@ XS(_wrap_IdentifyDriver) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     {
       /* %typemap(freearg) char **options */
@@ -25299,9 +25324,9 @@ XS(_wrap_GeneralCmdLineProcessor) {
             AV *av = (AV*)(SvRV(ST(0)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddString(arg1, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(0)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(0));
@@ -25311,9 +25336,9 @@ XS(_wrap_GeneralCmdLineProcessor) {
             arg1 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddNameValue(arg1, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);
@@ -25404,9 +25429,9 @@ XS(_wrap_new_GDALInfoOptions) {
             AV *av = (AV*)(SvRV(ST(0)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddString(arg1, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(0)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(0));
@@ -25416,9 +25441,9 @@ XS(_wrap_new_GDALInfoOptions) {
             arg1 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddNameValue(arg1, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);
@@ -25613,9 +25638,9 @@ XS(_wrap_new_GDALTranslateOptions) {
             AV *av = (AV*)(SvRV(ST(0)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddString(arg1, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(0)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(0));
@@ -25625,9 +25650,9 @@ XS(_wrap_new_GDALTranslateOptions) {
             arg1 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddNameValue(arg1, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);
@@ -25840,7 +25865,7 @@ XS(_wrap_wrapper_GDALTranslate) {
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GDALDatasetShadow, SWIG_OWNER | SWIG_SHADOW); argvi++ ;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     
@@ -25849,7 +25874,7 @@ XS(_wrap_wrapper_GDALTranslate) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     
@@ -25877,9 +25902,9 @@ XS(_wrap_new_GDALWarpAppOptions) {
             AV *av = (AV*)(SvRV(ST(0)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddString(arg1, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(0)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(0));
@@ -25889,9 +25914,9 @@ XS(_wrap_new_GDALWarpAppOptions) {
             arg1 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddNameValue(arg1, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);
@@ -26225,7 +26250,7 @@ XS(_wrap_wrapper_GDALWarpDestName) {
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GDALDatasetShadow, SWIG_OWNER | SWIG_SHADOW); argvi++ ;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     
@@ -26233,7 +26258,7 @@ XS(_wrap_wrapper_GDALWarpDestName) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     
@@ -26260,9 +26285,9 @@ XS(_wrap_new_GDALVectorTranslateOptions) {
             AV *av = (AV*)(SvRV(ST(0)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddString(arg1, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(0)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(0));
@@ -26272,9 +26297,9 @@ XS(_wrap_new_GDALVectorTranslateOptions) {
             arg1 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddNameValue(arg1, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);
@@ -26594,7 +26619,7 @@ XS(_wrap_wrapper_GDALVectorTranslateDestName) {
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GDALDatasetShadow, SWIG_OWNER | SWIG_SHADOW); argvi++ ;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     
@@ -26603,7 +26628,7 @@ XS(_wrap_wrapper_GDALVectorTranslateDestName) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     
@@ -26631,9 +26656,9 @@ XS(_wrap_new_GDALDEMProcessingOptions) {
             AV *av = (AV*)(SvRV(ST(0)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddString(arg1, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(0)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(0));
@@ -26643,9 +26668,9 @@ XS(_wrap_new_GDALDEMProcessingOptions) {
             arg1 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddNameValue(arg1, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);
@@ -26885,7 +26910,7 @@ XS(_wrap_wrapper_GDALDEMProcessing) {
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GDALDatasetShadow, SWIG_OWNER | SWIG_SHADOW); argvi++ ;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     if (alloc3 == SWIG_NEWOBJ) delete[] buf3;
@@ -26896,7 +26921,7 @@ XS(_wrap_wrapper_GDALDEMProcessing) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     if (alloc3 == SWIG_NEWOBJ) delete[] buf3;
@@ -26926,9 +26951,9 @@ XS(_wrap_new_GDALNearblackOptions) {
             AV *av = (AV*)(SvRV(ST(0)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddString(arg1, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(0)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(0));
@@ -26938,9 +26963,9 @@ XS(_wrap_new_GDALNearblackOptions) {
             arg1 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddNameValue(arg1, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);
@@ -27260,7 +27285,7 @@ XS(_wrap_wrapper_GDALNearblackDestName) {
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GDALDatasetShadow, SWIG_OWNER | SWIG_SHADOW); argvi++ ;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     
@@ -27269,7 +27294,7 @@ XS(_wrap_wrapper_GDALNearblackDestName) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     
@@ -27297,9 +27322,9 @@ XS(_wrap_new_GDALGridOptions) {
             AV *av = (AV*)(SvRV(ST(0)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddString(arg1, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(0)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(0));
@@ -27309,9 +27334,9 @@ XS(_wrap_new_GDALGridOptions) {
             arg1 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddNameValue(arg1, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);
@@ -27524,7 +27549,7 @@ XS(_wrap_wrapper_GDALGrid) {
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GDALDatasetShadow, SWIG_OWNER | SWIG_SHADOW); argvi++ ;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     
@@ -27533,7 +27558,7 @@ XS(_wrap_wrapper_GDALGrid) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     
@@ -27561,9 +27586,9 @@ XS(_wrap_new_GDALRasterizeOptions) {
             AV *av = (AV*)(SvRV(ST(0)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddString(arg1, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(0)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(0));
@@ -27573,9 +27598,9 @@ XS(_wrap_new_GDALRasterizeOptions) {
             arg1 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddNameValue(arg1, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);
@@ -27895,7 +27920,7 @@ XS(_wrap_wrapper_GDALRasterizeDestName) {
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GDALDatasetShadow, SWIG_OWNER | SWIG_SHADOW); argvi++ ;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     
@@ -27904,7 +27929,7 @@ XS(_wrap_wrapper_GDALRasterizeDestName) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     
@@ -27932,9 +27957,9 @@ XS(_wrap_new_GDALBuildVRTOptions) {
             AV *av = (AV*)(SvRV(ST(0)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddString(arg1, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(0)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(0));
@@ -27944,9 +27969,9 @@ XS(_wrap_new_GDALBuildVRTOptions) {
             arg1 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg1 = CSLAddNameValue(arg1, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);
@@ -28162,7 +28187,7 @@ XS(_wrap_wrapper_GDALBuildVRT_objects) {
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GDALDatasetShadow, SWIG_OWNER | SWIG_SHADOW); argvi++ ;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     
@@ -28170,7 +28195,7 @@ XS(_wrap_wrapper_GDALBuildVRT_objects) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     
@@ -28220,9 +28245,9 @@ XS(_wrap_wrapper_GDALBuildVRT_names) {
               AV *av = (AV*)(SvRV(ST(1)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg2 = CSLAddString(arg2, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(1)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(1));
@@ -28232,9 +28257,9 @@ XS(_wrap_wrapper_GDALBuildVRT_names) {
               arg2 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg2 = CSLAddNameValue(arg2, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -28306,7 +28331,7 @@ XS(_wrap_wrapper_GDALBuildVRT_names) {
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GDALDatasetShadow, SWIG_OWNER | SWIG_SHADOW); argvi++ ;
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     {
       /* %typemap(freearg) char **options */
@@ -28318,7 +28343,7 @@ XS(_wrap_wrapper_GDALBuildVRT_names) {
   fail:
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     {
       /* %typemap(freearg) char **options */

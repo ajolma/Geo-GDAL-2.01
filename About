@@ -28,3 +28,5 @@ but may include changes from the trunk. These changes are currently:
 * Detect 64bit Integer fields in Feature.SetField
 
 * Fix for connectedness in Band.Polygonize
+
+* Fix for https://trac.osgeo.org/gdal/ticket/6796

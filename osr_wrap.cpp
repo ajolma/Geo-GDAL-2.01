@@ -1684,10 +1684,10 @@ OGRErr GetWellKnownGeogCSAsWKT( const char *name, char **argout ) {
   return rcode;
 }
 
-
-    char *sv_to_utf8_string(SV *sv, U8 **tmpbuf) {
+char *sv_to_utf8_string(SV *sv, U8 **tmpbuf, bool *safefree = NULL) {
         /* if tmpbuf, only tmpbuf is freed; if not, ret is freed*/
         char *ret;
+        if (safefree) *safefree = false;
         if (SvOK(sv)) {
             STRLEN len;
             ret = SvPV(sv, len);
@@ -1698,6 +1698,7 @@ OGRErr GetWellKnownGeogCSAsWKT( const char *name, char **argout ) {
                 } else {
                     ret = (char *)bytes_to_utf8((const U8*)ret, &len);
                 }
+                if (safefree) *safefree = true;
             } else {
                 if (!tmpbuf)
                     ret = strdup(ret);
@@ -2546,7 +2547,7 @@ XS(_wrap_GetWellKnownGeogCSAsWKT) {
     }
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     {
       /* %typemap(freearg) (char **argout) */
@@ -2557,7 +2558,7 @@ XS(_wrap_GetWellKnownGeogCSAsWKT) {
   fail:
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     {
       /* %typemap(freearg) (char **argout) */
@@ -2638,7 +2639,7 @@ XS(_wrap_GetUserInputAsWKT) {
     }
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     {
       /* %typemap(freearg) (char **argout) */
@@ -2649,7 +2650,7 @@ XS(_wrap_GetUserInputAsWKT) {
   fail:
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     {
       /* %typemap(freearg) (char **argout) */
@@ -3809,7 +3810,7 @@ XS(_wrap_SpatialReference_GetAttrValue) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     XSRETURN(argvi);
@@ -3817,7 +3818,7 @@ XS(_wrap_SpatialReference_GetAttrValue) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     SWIG_croak_null();
@@ -3897,7 +3898,7 @@ XS(_wrap_SpatialReference_SetAttrValue) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     if (alloc3 == SWIG_NEWOBJ) delete[] buf3;
     XSRETURN(argvi);
@@ -3905,7 +3906,7 @@ XS(_wrap_SpatialReference_SetAttrValue) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     if (alloc3 == SWIG_NEWOBJ) delete[] buf3;
     SWIG_croak_null();
@@ -3984,7 +3985,7 @@ XS(_wrap_SpatialReference_SetAngularUnits) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     XSRETURN(argvi);
@@ -3992,7 +3993,7 @@ XS(_wrap_SpatialReference_SetAngularUnits) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     SWIG_croak_null();
@@ -4189,7 +4190,7 @@ XS(_wrap_SpatialReference_SetTargetLinearUnits) {
     if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf3) free(tmpbuf3);
+      if (tmpbuf3) Safefree(tmpbuf3);
     }
     
     XSRETURN(argvi);
@@ -4198,7 +4199,7 @@ XS(_wrap_SpatialReference_SetTargetLinearUnits) {
     if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf3) free(tmpbuf3);
+      if (tmpbuf3) Safefree(tmpbuf3);
     }
     
     SWIG_croak_null();
@@ -4277,7 +4278,7 @@ XS(_wrap_SpatialReference_SetLinearUnits) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     XSRETURN(argvi);
@@ -4285,7 +4286,7 @@ XS(_wrap_SpatialReference_SetLinearUnits) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     SWIG_croak_null();
@@ -4364,7 +4365,7 @@ XS(_wrap_SpatialReference_SetLinearUnitsAndUpdateParameters) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     XSRETURN(argvi);
@@ -4372,7 +4373,7 @@ XS(_wrap_SpatialReference_SetLinearUnitsAndUpdateParameters) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     SWIG_croak_null();
@@ -5304,7 +5305,7 @@ XS(_wrap_SpatialReference_SetProjParm) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     XSRETURN(argvi);
@@ -5312,7 +5313,7 @@ XS(_wrap_SpatialReference_SetProjParm) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     SWIG_croak_null();
@@ -5386,7 +5387,7 @@ XS(_wrap_SpatialReference_GetProjParm) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     XSRETURN(argvi);
@@ -5394,7 +5395,7 @@ XS(_wrap_SpatialReference_GetProjParm) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     SWIG_croak_null();
@@ -5473,7 +5474,7 @@ XS(_wrap_SpatialReference_SetNormProjParm) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     XSRETURN(argvi);
@@ -5481,7 +5482,7 @@ XS(_wrap_SpatialReference_SetNormProjParm) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     SWIG_croak_null();
@@ -5555,7 +5556,7 @@ XS(_wrap_SpatialReference_GetNormProjParm) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     XSRETURN(argvi);
@@ -5563,7 +5564,7 @@ XS(_wrap_SpatialReference_GetNormProjParm) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     SWIG_croak_null();
@@ -9878,14 +9879,14 @@ XS(_wrap_SpatialReference_SetWellKnownGeogCS) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -9955,14 +9956,14 @@ XS(_wrap_SpatialReference_SetFromUserInput) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -10552,14 +10553,14 @@ XS(_wrap_SpatialReference_SetProjCS) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -10631,14 +10632,14 @@ XS(_wrap_SpatialReference_SetGeocCS) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -10830,7 +10831,7 @@ XS(_wrap_SpatialReference_SetCompoundCS) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     
@@ -10839,7 +10840,7 @@ XS(_wrap_SpatialReference_SetCompoundCS) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     
@@ -10908,14 +10909,14 @@ XS(_wrap_SpatialReference_ImportFromWkt) {
     
     {
       /* %typemap(freearg) (char **ignorechange) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     
     {
       /* %typemap(freearg) (char **ignorechange) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -11091,9 +11092,9 @@ XS(_wrap_SpatialReference_ImportFromESRI) {
             AV *av = (AV*)(SvRV(ST(1)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg2 = CSLAddString(arg2, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(1)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(1));
@@ -11103,9 +11104,9 @@ XS(_wrap_SpatialReference_ImportFromESRI) {
             arg2 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg2 = CSLAddNameValue(arg2, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);
@@ -11775,9 +11776,9 @@ XS(_wrap_SpatialReference_ImportFromOzi) {
             AV *av = (AV*)(SvRV(ST(1)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg2 = CSLAddString(arg2, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(1)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(1));
@@ -11787,9 +11788,9 @@ XS(_wrap_SpatialReference_ImportFromOzi) {
             arg2 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg2 = CSLAddNameValue(arg2, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);

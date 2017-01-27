@@ -1826,9 +1826,10 @@ SWIGINTERN int OGRStyleTableShadow_AddStyle(OGRStyleTableShadow *self,char const
         return OGR_STBL_AddStyle( (OGRStyleTableH) self, pszName, pszStyleString);
    }
 
-    char *sv_to_utf8_string(SV *sv, U8 **tmpbuf) {
+char *sv_to_utf8_string(SV *sv, U8 **tmpbuf, bool *safefree = NULL) {
         /* if tmpbuf, only tmpbuf is freed; if not, ret is freed*/
         char *ret;
+        if (safefree) *safefree = false;
         if (SvOK(sv)) {
             STRLEN len;
             ret = SvPV(sv, len);
@@ -1839,6 +1840,7 @@ SWIGINTERN int OGRStyleTableShadow_AddStyle(OGRStyleTableShadow *self,char const
                 } else {
                     ret = (char *)bytes_to_utf8((const U8*)ret, &len);
                 }
+                if (safefree) *safefree = true;
             } else {
                 if (!tmpbuf)
                     ret = strdup(ret);
@@ -3540,14 +3542,14 @@ XS(_wrap_StyleTable_LoadStyleTable) {
     
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -3611,14 +3613,14 @@ XS(_wrap_StyleTable_SaveStyleTable) {
     
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     
     {
       /* %typemap(freearg) (const char* utf8_path) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -6456,9 +6458,9 @@ XS(_wrap_Layer_SetIgnoredFields) {
             AV *av = (AV*)(SvRV(ST(1)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg2 = CSLAddString(arg2, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(1)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(1));
@@ -6468,9 +6470,9 @@ XS(_wrap_Layer_SetIgnoredFields) {
             arg2 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg2 = CSLAddNameValue(arg2, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);
@@ -6577,9 +6579,9 @@ XS(_wrap_Layer_Intersection) {
               AV *av = (AV*)(SvRV(ST(3)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddString(arg4, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(3)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(3));
@@ -6589,9 +6591,9 @@ XS(_wrap_Layer_Intersection) {
               arg4 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddNameValue(arg4, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -6729,9 +6731,9 @@ XS(_wrap_Layer_Union) {
               AV *av = (AV*)(SvRV(ST(3)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddString(arg4, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(3)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(3));
@@ -6741,9 +6743,9 @@ XS(_wrap_Layer_Union) {
               arg4 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddNameValue(arg4, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -6881,9 +6883,9 @@ XS(_wrap_Layer_SymDifference) {
               AV *av = (AV*)(SvRV(ST(3)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddString(arg4, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(3)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(3));
@@ -6893,9 +6895,9 @@ XS(_wrap_Layer_SymDifference) {
               arg4 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddNameValue(arg4, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -7033,9 +7035,9 @@ XS(_wrap_Layer_Identity) {
               AV *av = (AV*)(SvRV(ST(3)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddString(arg4, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(3)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(3));
@@ -7045,9 +7047,9 @@ XS(_wrap_Layer_Identity) {
               arg4 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddNameValue(arg4, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -7185,9 +7187,9 @@ XS(_wrap_Layer_Update) {
               AV *av = (AV*)(SvRV(ST(3)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddString(arg4, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(3)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(3));
@@ -7197,9 +7199,9 @@ XS(_wrap_Layer_Update) {
               arg4 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddNameValue(arg4, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -7337,9 +7339,9 @@ XS(_wrap_Layer_Clip) {
               AV *av = (AV*)(SvRV(ST(3)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddString(arg4, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(3)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(3));
@@ -7349,9 +7351,9 @@ XS(_wrap_Layer_Clip) {
               arg4 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddNameValue(arg4, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -7489,9 +7491,9 @@ XS(_wrap_Layer_Erase) {
               AV *av = (AV*)(SvRV(ST(3)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddString(arg4, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(3)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(3));
@@ -7501,9 +7503,9 @@ XS(_wrap_Layer_Erase) {
               arg4 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg4 = CSLAddNameValue(arg4, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -8207,7 +8209,7 @@ XS(_wrap_Feature_SetGeomField__SWIG_1) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     XSRETURN(argvi);
@@ -8215,7 +8217,7 @@ XS(_wrap_Feature_SetGeomField__SWIG_1) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     SWIG_croak_null();
@@ -8466,7 +8468,7 @@ XS(_wrap_Feature_SetGeomFieldDirectly__SWIG_1) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     XSRETURN(argvi);
@@ -8474,7 +8476,7 @@ XS(_wrap_Feature_SetGeomFieldDirectly__SWIG_1) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     
     SWIG_croak_null();
@@ -8697,14 +8699,14 @@ XS(_wrap_Feature_GetGeomFieldRef__SWIG_1) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -10047,14 +10049,14 @@ XS(_wrap_Feature__GetFieldIndex) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -10117,14 +10119,14 @@ XS(_wrap_Feature__GetGeomFieldIndex) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -10424,7 +10426,7 @@ XS(_wrap_Feature__SetField__SWIG_0) {
     
     {
       /* %typemap(freearg) (tostring argin) */
-      if (tmpbuf3) free(tmpbuf3);
+      if (tmpbuf3) Safefree(tmpbuf3);
     }
     XSRETURN(argvi);
   fail:
@@ -10432,7 +10434,7 @@ XS(_wrap_Feature__SetField__SWIG_0) {
     
     {
       /* %typemap(freearg) (tostring argin) */
-      if (tmpbuf3) free(tmpbuf3);
+      if (tmpbuf3) Safefree(tmpbuf3);
     }
     SWIG_croak_null();
   }
@@ -11323,9 +11325,9 @@ XS(_wrap_Feature_SetFieldStringList) {
             AV *av = (AV*)(SvRV(ST(2)));
             for (int i = 0; i < av_len(av)+1; i++) {
               SV *sv = *(av_fetch(av, i, 0));
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg3 = CSLAddString(arg3, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else if (SvTYPE(SvRV(ST(2)))==SVt_PVHV) {
             HV *hv = (HV*)SvRV(ST(2));
@@ -11335,9 +11337,9 @@ XS(_wrap_Feature_SetFieldStringList) {
             arg3 = NULL;
             hv_iterinit(hv);
             while(sv = hv_iternextsv(hv, &key, &klen)) {
-              char *tmp = sv_to_utf8_string(sv, NULL);
+              bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
               arg3 = CSLAddNameValue(arg3, key, tmp);
-              free(tmp);
+              if (sf) Safefree(tmp); else free(tmp);
             }
           } else
           do_confess(NEED_REF, 1);
@@ -12018,9 +12020,9 @@ XS(_wrap_Feature_FillUnsetWithDefault) {
               AV *av = (AV*)(SvRV(ST(2)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg3 = CSLAddString(arg3, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(2)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(2));
@@ -12030,9 +12032,9 @@ XS(_wrap_Feature_FillUnsetWithDefault) {
               arg3 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg3 = CSLAddNameValue(arg3, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -12658,14 +12660,14 @@ XS(_wrap_FeatureDefn__GetFieldIndex) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -12907,14 +12909,14 @@ XS(_wrap_FeatureDefn__GetGeomFieldIndex) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -13801,14 +13803,14 @@ XS(_wrap_FieldDefn_SetName) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -15190,14 +15192,14 @@ XS(_wrap_GeomFieldDefn_SetName) {
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     XSRETURN(argvi);
   fail:
     
     {
       /* %typemap(freearg) (const char* name) */
-      if (tmpbuf2) free(tmpbuf2);
+      if (tmpbuf2) Safefree(tmpbuf2);
     }
     SWIG_croak_null();
   }
@@ -15781,14 +15783,14 @@ XS(_wrap_CreateGeometryFromWkt) {
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_OGRGeometryShadow, SWIG_OWNER | SWIG_SHADOW); argvi++ ;
     {
       /* %typemap(freearg) (char **ignorechange) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     XSRETURN(argvi);
   fail:
     {
       /* %typemap(freearg) (char **ignorechange) */
-      if (tmpbuf1) free(tmpbuf1);
+      if (tmpbuf1) Safefree(tmpbuf1);
     }
     
     SWIG_croak_null();
@@ -16408,9 +16410,9 @@ XS(_wrap_ForceTo) {
               AV *av = (AV*)(SvRV(ST(2)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg3 = CSLAddString(arg3, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(2)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(2));
@@ -16420,9 +16422,9 @@ XS(_wrap_ForceTo) {
               arg3 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg3 = CSLAddNameValue(arg3, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -17011,9 +17013,9 @@ XS(_wrap_Geometry_ExportToGML) {
               AV *av = (AV*)(SvRV(ST(1)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg2 = CSLAddString(arg2, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(1)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(1));
@@ -17023,9 +17025,9 @@ XS(_wrap_Geometry_ExportToGML) {
               arg2 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg2 = CSLAddNameValue(arg2, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -17191,9 +17193,9 @@ XS(_wrap_Geometry_ExportToJson) {
               AV *av = (AV*)(SvRV(ST(1)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg2 = CSLAddString(arg2, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(1)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(1));
@@ -17203,9 +17205,9 @@ XS(_wrap_Geometry_ExportToJson) {
               arg2 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg2 = CSLAddNameValue(arg2, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -22145,9 +22147,9 @@ XS(_wrap_Geometry_GetLinearGeometry) {
               AV *av = (AV*)(SvRV(ST(2)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg3 = CSLAddString(arg3, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(2)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(2));
@@ -22157,9 +22159,9 @@ XS(_wrap_Geometry_GetLinearGeometry) {
               arg3 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg3 = CSLAddNameValue(arg3, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
@@ -22239,9 +22241,9 @@ XS(_wrap_Geometry_GetCurveGeometry) {
               AV *av = (AV*)(SvRV(ST(1)));
               for (int i = 0; i < av_len(av)+1; i++) {
                 SV *sv = *(av_fetch(av, i, 0));
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg2 = CSLAddString(arg2, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else if (SvTYPE(SvRV(ST(1)))==SVt_PVHV) {
               HV *hv = (HV*)SvRV(ST(1));
@@ -22251,9 +22253,9 @@ XS(_wrap_Geometry_GetCurveGeometry) {
               arg2 = NULL;
               hv_iterinit(hv);
               while(sv = hv_iternextsv(hv, &key, &klen)) {
-                char *tmp = sv_to_utf8_string(sv, NULL);
+                bool sf; char *tmp = sv_to_utf8_string(sv, NULL, &sf);
                 arg2 = CSLAddNameValue(arg2, key, tmp);
-                free(tmp);
+                if (sf) Safefree(tmp); else free(tmp);
               }
             } else
             do_confess(NEED_REF, 1);
