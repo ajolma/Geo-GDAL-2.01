@@ -3,6 +3,10 @@
 #sudo: required
 #dist: trusty
 
+os:
+  - linux
+  - osx
+
 language: perl
 perl:
   - "5.10"
