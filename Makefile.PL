@@ -477,7 +477,6 @@ sub get_config {
         my $ans;
         chomp($ans = `$config --gnm-enabled`);
         if ($ans eq 'yes') {
-            $INC .= " -I$source_tree/gnm ";
             $objects->{'Geo::GNM'} = 'gnm_wrap.o';
         }
     }
