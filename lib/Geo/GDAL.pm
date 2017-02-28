@@ -1795,18 +1795,15 @@ sub Extent {
 sub Tile { # $xoff, $yoff, $xsize, $ysize, assuming strict north up
     my ($self, $e) = @_;
     my ($w, $h) = $self->Size;
-    #print "sz $w $h\n";
-    my $gt = $self->GeoTransform;
-    #print "gt @$gt\n";
-    confess "GeoTransform is not \"north up\"." unless $gt->NorthUp;
-    my $x = $gt->Extent($w, $h);
-    my $xoff = floor(($e->[0] - $gt->[0])/$gt->[1]);
+    my $t = $self->GeoTransform;
+    confess "GeoTransform is not \"north up\"." unless $t->NorthUp;
+    my $xoff = floor(($e->[0] - $t->[0])/$t->[1]);
     $xoff = 0 if $xoff < 0;
-    my $yoff = floor(($gt->[3] - $e->[3])/(-$gt->[5]));
+    my $yoff = floor(($e->[1] - $t->[3])/$t->[5]);
     $yoff = 0 if $yoff < 0;
-    my $xsize = ceil(($e->[2] - $gt->[0])/$gt->[1]) - $xoff;
+    my $xsize = ceil(($e->[2] - $t->[0])/$t->[1]) - $xoff;
     $xsize = $w - $xoff if $xsize > $w - $xoff;
-    my $ysize = ceil(($gt->[3] - $e->[1])/(-$gt->[5])) - $yoff;
+    my $ysize = ceil(($e->[3] - $t->[3])/$t->[5]) - $yoff;
     $ysize = $h - $yoff if $ysize > $h - $yoff;
     return ($xoff, $yoff, $xsize, $ysize);
 }
